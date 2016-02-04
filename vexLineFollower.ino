@@ -25,7 +25,7 @@ void loop() {
    Serial.println(F("Left"));
    servR.write(10);
    servL.write(90);
-  } else if (m > cutoff){
+  } else if (m > cutoff || (!(l > cutoff) && !(m > cutoff) && !(r > cutoff))){
    Serial.println(F("Middle"));
    servR.write(10);
    servL.write(10);
