@@ -1,16 +1,19 @@
 #include <Servo.h>
 #include <EEPROM.h>
 #define btnPin 5
-#define cutoff 200
-#define lowR 70
-#define lowL 125//110
-#define topR 0
-#define topL 180
+//#define cutoff 200
+#define lowL 75//70
+#define lowR 120//125
+#define topL 50//0
+#define topR 140//180
 
 int l, r, m;
 
+int cutoff = 200;
+
 bool mode = false;
 int iter = 0;
+int direc = 0;
 
 Servo servR;
 Servo servL;
@@ -34,9 +37,9 @@ void setup() {
   pinMode(3, OUTPUT);
   servR.attach(10);
   servL.attach(11);
-  bool test = true;
-  int high = 516;
-  int low = 516;
+  //bool test = true;
+  int high = 0;
+  int low = 1000;
   for (int i; i<100; i++){
     l = analogRead(2);
     m = analogRead(1);
@@ -61,6 +64,7 @@ void setup() {
     }
     delay(1);
   }
+  cutoff = (high + low)/2;
 }
 
 void loop() {
@@ -75,22 +79,36 @@ void loop() {
     EEPROM.write(iter, r);
     iter++;
     //Serial.println(String(l) + ", " + String(m) + ", " + String(r));
-    if (l > cutoff && !(m > cutoff) && !(r > cutoff)){
+    if (m > cutoff){
+      Serial.println(F("Middle"));
+      servR.write(lowR);
+      servL.write(lowL);
+      direc = 0;
+    } else if (l > cutoff && !(m > cutoff) && !(r > cutoff)){
       Serial.println(F("Right")); 
       servL.write(topL);
       servR.write(90);
+      direc = 2;
     } else if (!(l > cutoff) && !(m > cutoff) && r > cutoff){
       Serial.println(F("Left"));
       servR.write(topR);
       servL.write(90);
-    } else if (m > cutoff || (!(l > cutoff) && !(m > cutoff) && !(r > cutoff))){
-      Serial.println(F("Middle"));
-      servR.write(lowR);
-      servL.write(lowL);
+      direc = 1;
     } else if (l > cutoff && !(m > cutoff) && r > cutoff){
       Serial.println(F("Fork"));
       servL.write(lowL);
       servR.write(lowR);
+    }else if (!(l > cutoff) && !(m > cutoff) && !(r > cutoff)){
+      if (direc == 2){
+        servL.write(topL);
+        servR.write(90);
+      } else if (direc == 1){
+        servR.write(topR);
+        servL.write(90);
+      }else if (direc == 0){
+        servR.write(lowR);
+        servL.write(lowL);
+      }
     }
   }
 }
